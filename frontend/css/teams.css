@@ -1,0 +1,302 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+}
+
+/* NAV */
+nav {
+    background: #1a1d2e;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #2d3148;
+}
+
+nav .logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4ade80;
+    letter-spacing: 2px;
+}
+
+nav .nav-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    margin-left: 24px;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+nav .nav-links a:hover,
+nav .nav-links a.active {
+    color: #4ade80;
+}
+
+/* MAIN LAYOUT */
+.container {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 0 24px;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+}
+
+.page-header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.page-header h1 span {
+    color: #4ade80;
+}
+
+/* BUTTONS */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #4ade80;
+    color: #0f1117;
+}
+
+.btn-primary:hover {
+    background: #22c55e;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: #fff;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-secondary {
+    background: #2d3148;
+    color: #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #3d4168;
+}
+
+/* TEAM CARDS */
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.team-card {
+    background: #1a1d2e;
+    border: 1px solid #2d3148;
+    border-radius: 12px;
+    padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+
+.team-card:hover {
+    border-color: #4ade80;
+    transform: translateY(-2px);
+}
+
+.team-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.team-card p {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    min-height: 36px;
+}
+
+.team-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.member-count {
+    font-size: 0.8rem;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.role-badge {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.role-owner {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+}
+
+.role-member {
+    background: rgba(148, 163, 184, 0.1);
+    color: #94a3b8;
+}
+
+/* EMPTY STATE */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: #475569;
+}
+
+.empty-state svg {
+    margin-bottom: 16px;
+    opacity: 0.4;
+}
+
+.empty-state p {
+    font-size: 1rem;
+}
+
+/* MODAL */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal {
+    background: #1a1d2e;
+    border: 1px solid #2d3148;
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 460px;
+}
+
+.modal h2 {
+    margin-bottom: 24px;
+    font-size: 1.2rem;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    background: #0f1117;
+    border: 1px solid #2d3148;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #4ade80;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+/* TOAST */
+.toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: #1a1d2e;
+    border: 1px solid #2d3148;
+    border-left: 4px solid #4ade80;
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-size: 0.9rem;
+    z-index: 200;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+}
+
+/* LOADING */
+.spinner {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border: 3px solid #2d3148;
+    border-top-color: #4ade80;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 40px auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-wrapper {
+    display: flex;
+    justify-content: center;
+}

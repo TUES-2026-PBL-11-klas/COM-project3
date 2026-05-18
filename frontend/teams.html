@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams — NEXORA</title>
+    <link rel="stylesheet" href="css/teams.css">
+</head>
+<body>
+
+<nav>
+    <span class="logo">NEXORA</span>
+    <div class="nav-links">
+        <a href="#">Map</a>
+        <a href="#">Reports</a>
+        <a href="teams.html" class="active">Teams</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header">
+        <h1>My <span>Teams</span></h1>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ Create Team</button>
+    </div>
+
+    <div id="teams-container">
+        <div class="loading-wrapper"><div class="spinner"></div></div>
+    </div>
+</div>
+
+<!-- Create Team Modal -->
+<div class="modal-overlay" id="create-modal">
+    <div class="modal">
+        <h2>Create a New Team</h2>
+        <div class="form-group">
+            <label>Team Name *</label>
+            <input type="text" id="team-name" placeholder="e.g. Green Warriors" maxlength="100">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="team-desc" placeholder="What does your team do?"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="createTeam()">Create</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/teams.js"></script>
+</body>
+</html>
