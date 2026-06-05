@@ -97,15 +97,20 @@ function showToast(message) {
 
 function buildApiCandidates() {
   const stored = localStorage.getItem(`${storageKey}_api`);
+  const preferred = 'https://com-project3.onrender.com';
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const storedIsLocal = stored && (stored.includes('localhost') || stored.includes('127.0.0.1'));
   const candidates = [
-    stored,
-    'https://com-project3.onrender.com',
-    'http://localhost:5432',
-    'http://localhost:30543',
-    'http://localhost:5210',
-    'https://localhost:7210',
-    'http://localhost:5000',
-    'https://localhost:5001'
+    storedIsLocal && !isLocal ? null : stored,
+    preferred,
+    ...(isLocal ? [
+      'http://localhost:5432',
+      'http://localhost:30543',
+      'http://localhost:5210',
+      'https://localhost:7210',
+      'http://localhost:5000',
+      'https://localhost:5001'
+    ] : [])
   ];
   return Array.from(new Set(candidates.filter(Boolean)));
 }

@@ -1,11 +1,16 @@
+const API_BASE_DEFAULT = 'https://com-project3.onrender.com';
+const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
 const API_CANDIDATES = [
-  'https://com-project3.onrender.com',
-  'http://localhost:5432',
-  'http://localhost:30543',
-  'http://localhost:5210',
-  'http://localhost:7210',
-  'http://localhost:5000',
-  'http://localhost:5001',
+  API_BASE_DEFAULT,
+  ...(IS_LOCAL ? [
+    'http://localhost:5432',
+    'http://localhost:30543',
+    'http://localhost:5210',
+    'http://localhost:7210',
+    'http://localhost:5000',
+    'http://localhost:5001'
+  ] : [])
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -13,6 +18,9 @@ const teamId = params.get('id');
 if (!teamId) window.location.href = 'teams.html';
 
 let API_BASE = localStorage.getItem('cm_api_base') || '';
+if (!IS_LOCAL && (API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1'))) {
+  API_BASE = '';
+}
 let currentUserId = localStorage.getItem('cm_user_id') || '';
 let currentTeam = null;
 
