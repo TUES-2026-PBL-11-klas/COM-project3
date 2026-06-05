@@ -39,13 +39,23 @@ public static class ServiceCollectionExtensions
         {
             options.AddPolicy(CleanMapCorsPolicyNames.CleanMap, policy =>
             {
-                policy.WithOrigins(
-                        "http://localhost:8000",
-                        "http://127.0.0.1:8000",
-                        "http://localhost:5173",
-                        "http://127.0.0.1:5173")
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                var rawOrigins = Environment.GetEnvironmentVariable("CORS_ORIGINS");
+                var origins = string.IsNullOrWhiteSpace(rawOrigins)
+                    ? Array.Empty<string>()
+                    : rawOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                if (origins.Length > 0)
+                {
+                    policy.WithOrigins(origins)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                }
+                else
+                {
+                    policy.AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                }
             });
         });
 

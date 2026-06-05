@@ -28,7 +28,7 @@ async function detectApiAndLoad() {
   let found = '';
   for (const base of candidates) {
     try {
-      const res = await fetch(`${base}/api/cleanmap/health`, { signal: AbortSignal.timeout(2000) });
+      const res = await fetch(`${base}/api/cleanmap/ping`, { signal: AbortSignal.timeout(6000) });
       if (res.ok) { found = base; break; }
     } catch { /* try next */ }
   }

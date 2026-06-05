@@ -132,7 +132,7 @@ async function detectApiBase() {
   const candidates = buildApiCandidates();
   for (const base of candidates) {
     try {
-      await fetchJson(`${base}/api/cleanmap/health`, {}, 2000);
+      await fetchJson(`${base}/api/cleanmap/ping`, {}, 6000);
       state.apiBase = base;
       state.apiEnabled = true;
       return true;

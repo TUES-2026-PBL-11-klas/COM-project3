@@ -7,6 +7,8 @@ public static class CleanMapEndpoints
     {
         var group = endpoints.MapGroup("/api/cleanmap");
 
+        group.MapGet("/ping", () => Results.Ok(new { status = "ok" }));
+
         group.MapGet("/health", async (
             ICleanMapHealthCheck healthCheck,
             CancellationToken cancellationToken) =>
