@@ -653,8 +653,8 @@ html, body {
 
 .review-thumb {
   width: 100% !important;
-  height: 55% !important;
-  max-height: 270px !important;
+  height: 62% !important;
+  max-height: 320px !important;
   object-fit: cover !important;
   border-radius: 12px !important;
   background: #0a101a !important;
@@ -758,5 +758,5 @@ html, body {
   margin-top: 8px;
   display: block;
   object-fit: contain;
-  max-height: calc(92vh - 120px);
+  max-height: 70vh;
 }
