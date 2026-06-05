@@ -1,6 +1,5 @@
-// ---- Config ----
-// Tries the same ports as the main CleanMap app
 const API_CANDIDATES = [
+  'https://com-project3.onrender.com',
   'http://localhost:5432',
   'http://localhost:30543',
   'http://localhost:5210',
@@ -12,7 +11,6 @@ const API_CANDIDATES = [
 let API_BASE = localStorage.getItem('cm_api_base') || '';
 let currentUserId = localStorage.getItem('cm_user_id') || '';
 
-// ---- Init ----
 document.getElementById('userIdInput').value = currentUserId;
 updateUserLabel();
 
@@ -22,7 +20,6 @@ if (!currentUserId) {
 
 detectApiAndLoad();
 
-// ---- API detection ----
 async function detectApiAndLoad() {
   const candidates = API_CANDIDATES.slice();
   if (API_BASE && !candidates.includes(API_BASE)) candidates.unshift(API_BASE);
@@ -32,7 +29,7 @@ async function detectApiAndLoad() {
     try {
       const res = await fetch(`${base}/api/cleanmap/health`, { signal: AbortSignal.timeout(2000) });
       if (res.ok) { found = base; break; }
-    } catch { /* try next */ }
+    } catch {  }
   }
 
   if (found) {
@@ -48,7 +45,6 @@ async function detectApiAndLoad() {
   if (currentUserId) loadTeams();
 }
 
-// ---- User ID ----
 function setUserId() {
   const val = document.getElementById('userIdInput').value.trim();
   if (!val) { showToast('Enter a user ID.', true); return; }
@@ -63,7 +59,6 @@ function updateUserLabel() {
   el.textContent = currentUserId ? `Signed in as: ${currentUserId}` : '';
 }
 
-// ---- Load & render ----
 async function loadTeams() {
   if (!currentUserId) return;
   document.getElementById('teamsContainer').innerHTML =
@@ -120,7 +115,6 @@ function goToTeam(id) {
   window.location.href = `team-detail.html?id=${encodeURIComponent(id)}`;
 }
 
-// ---- Create team ----
 function openCreateModal() {
   if (!currentUserId) { showToast('Set your user ID first.', true); return; }
   document.getElementById('createModal').classList.add('open');
@@ -164,7 +158,6 @@ async function createTeam() {
   }
 }
 
-// ---- Delete team ----
 async function deleteTeam(teamId, teamName) {
   if (!confirm(`Delete team "${teamName}"? This cannot be undone.`)) return;
 
@@ -187,7 +180,6 @@ async function deleteTeam(teamId, teamName) {
   }
 }
 
-// ---- Helpers ----
 function showToast(message, isError = false) {
   const toast = document.getElementById('toast');
   toast.textContent = message;

@@ -99,6 +99,7 @@ function buildApiCandidates() {
   const stored = localStorage.getItem(`${storageKey}_api`);
   const candidates = [
     stored,
+    'https://com-project3.onrender.com',
     'http://localhost:5432',
     'http://localhost:30543',
     'http://localhost:5210',
