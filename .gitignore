@@ -1,16 +1,20 @@
 # Build output
 bin/
 obj/
-
-# User secrets & local config (contain real credentials)
-*.user
-appsettings.Development.json
-appsettings.Local.json
-.env
-
-# VS Code
-.vscode/
-
-# OS
-.DS_Store
-Thumbs.db
+*.*cache
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.DS_Store
+*.vscode/
+*.idea/
+*.vs/
+*.sln
+*.suo
+*.json
+secret.yaml
+secret*.yaml
+appsettings.json
+appsettings.*.json
