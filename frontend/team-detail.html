@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team — NEXORA</title>
+    <link rel="stylesheet" href="css/teams.css">
+    <style>
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #4ade80; }
+
+        .team-header {
+            background: #1a1d2e;
+            border: 1px solid #2d3148;
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 28px;
+        }
+
+        .team-header h1 { font-size: 1.6rem; margin-bottom: 8px; }
+        .team-header p { color: #64748b; font-size: 0.9rem; }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+        }
+
+        .members-list {
+            background: #1a1d2e;
+            border: 1px solid #2d3148;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+
+        .member-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid #2d3148;
+            transition: background 0.15s;
+        }
+
+        .member-row:last-child { border-bottom: none; }
+        .member-row:hover { background: #1f2340; }
+
+        .member-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #2d3148;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #4ade80;
+        }
+
+        .member-name { font-size: 0.95rem; }
+        .member-joined { font-size: 0.78rem; color: #475569; margin-top: 2px; }
+
+        .add-member-card {
+            background: #1a1d2e;
+            border: 1px solid #2d3148;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .add-member-card h3 {
+            font-size: 1rem;
+            margin-bottom: 16px;
+        }
+
+        .add-member-form {
+            display: flex;
+            gap: 12px;
+        }
+
+        .add-member-form input {
+            flex: 1;
+            background: #0f1117;
+            border: 1px solid #2d3148;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #e2e8f0;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .add-member-form input:focus { border-color: #4ade80; }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .image-card {
+            background: #1a1d2e;
+            border: 1px solid #2d3148;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-card-info {
+            padding: 10px 14px;
+        }
+
+        .image-card-info p {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+
+        .image-card-info span {
+            font-size: 0.75rem;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <span class="logo">NEXORA</span>
+    <div class="nav-links">
+        <a href="#">Map</a>
+        <a href="#">Reports</a>
+        <a href="teams.html" class="active">Teams</a>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="teams.html" class="back-link">← Back to Teams</a>
+
+    <div id="team-header-container">
+        <div class="loading-wrapper"><div class="spinner"></div></div>
+    </div>
+
+    <div id="team-content" style="display:none">
+        <p class="section-title">Members</p>
+        <div class="members-list" id="members-list"></div>
+
+        <div class="add-member-card" id="add-member-card" style="display:none">
+            <h3>Add Member</h3>
+            <div class="add-member-form">
+                <input type="text" id="new-member-id" placeholder="Enter User ID">
+                <button class="btn btn-primary" onclick="addMember()">Add</button>
+            </div>
+        </div>
+
+        <p class="section-title" style="margin-top:32px">Team Images</p>
+        <div class="add-member-card" style="margin-bottom:20px">
+            <h3>Share an Image</h3>
+            <div class="form-group">
+                <label>Photo (JPG, PNG, WebP — max 5 MB)</label>
+                <input type="file" id="image-file" accept=".jpg,.jpeg,.png,.webp" style="color:#94a3b8">
+            </div>
+            <div class="form-group">
+                <label>Notes (optional)</label>
+                <input type="text" id="image-notes" placeholder="e.g. Near the park entrance">
+            </div>
+            <button class="btn btn-primary" onclick="uploadImage()">Upload</button>
+        </div>
+        <div id="images-grid" class="images-grid"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/team-detail.js"></script>
+</body>
+</html>

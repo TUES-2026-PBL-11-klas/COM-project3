@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexora-config
+  labels:
+    app: nexora-api
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  MongoDB__DatabaseName: "nexora"

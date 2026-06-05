@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexora-api
+  labels:
+    app: nexora-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nexora-api
+  template:
+    metadata:
+      labels:
+        app: nexora-api
+    spec:
+      containers:
+        - name: nexora-api
+          image: nexora-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: nexora-config
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: MongoDB__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: nexora-secret
+                  key: mongodb-connection-string
+            - name: MongoDB__DatabaseName
+              valueFrom:
+                configMapKeyRef:
+                  name: nexora-config
+                  key: MongoDB__DatabaseName
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

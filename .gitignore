@@ -1,0 +1,15 @@
+# Build output
+bin/
+obj/
+
+# User secrets & local config (contain real credentials)
+*.user
+appsettings.Development.json
+appsettings.Local.json
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

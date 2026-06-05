@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexora-api-service
+  labels:
+    app: nexora-api
+spec:
+  selector:
+    app: nexora-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
