@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "serve": "python3 serve.py"
+    "serve": "python3 serve.py",
+    "build": "echo \"static site\""
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }

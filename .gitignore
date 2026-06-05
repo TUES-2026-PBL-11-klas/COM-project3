@@ -16,7 +16,9 @@ obj/
 *.json
 secret.yaml
 secret*.yaml
-appsettings.json
-appsettings.*.json
+server/appsettings.json
+server/appsettings.*.json
+package-lock.json
+node_modules/
 alloy-*.yaml
 .env
