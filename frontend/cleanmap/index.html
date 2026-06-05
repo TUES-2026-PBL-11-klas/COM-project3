@@ -25,7 +25,13 @@
         </div>
       </div>
       <div class="top-actions">
-        <button id="reportBtn" class="btn primary">Report Pollution</button>
+        <div id="userIndicator" class="user-indicator hidden">
+          <div id="userAvatar" class="user-avatar">?</div>
+          <div id="userName" class="user-name">User</div>
+          <button id="logoutBtn" class="btn ghost small">Logout</button>
+        </div>
+        <button id="loginBtn" class="btn primary">Login</button>
+        <button id="reportBtn" class="btn primary hidden">Report Pollution</button>
         <button id="locateBtn" class="btn ghost">Find Me</button>
       </div>
     </header>
@@ -169,6 +175,57 @@
       <div class="modal-footer">
         <button id="submitClean" class="btn primary">Confirm Cleaned</button>
         <button id="cancelClean" class="btn ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="authModal" class="modal hidden" aria-hidden="true" role="dialog">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-mark"></div>
+        <div class="brand-title">Welcome to CleanMap</div>
+        <div class="brand-sub">Sign in or create an account to start reporting.</div>
+      </div>
+      
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active">Login</button>
+        <button id="tabSignup" class="auth-tab">Sign Up</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form" onsubmit="return false;">
+        <div class="auth-field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" class="text-input" placeholder="you@example.com" required>
+        </div>
+        <div class="auth-field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="text-input" placeholder="••••••••" required>
+        </div>
+        <div id="loginError" class="auth-error"></div>
+        <button type="submit" id="submitLogin" class="btn primary auth-submit">Login</button>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="signupForm" class="auth-form hidden" onsubmit="return false;">
+        <div class="auth-field">
+          <label for="signupUsername">Username</label>
+          <input type="text" id="signupUsername" class="text-input" placeholder="johndoe" minlength="3" required>
+        </div>
+        <div class="auth-field">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" class="text-input" placeholder="you@example.com" required>
+        </div>
+        <div class="auth-field">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" class="text-input" placeholder="Min 8 chars, 1 letter, 1 number" minlength="8" required>
+        </div>
+        <div id="signupError" class="auth-error"></div>
+        <button type="submit" id="submitSignup" class="btn primary auth-submit">Create Account</button>
+      </form>
+
+      <div class="auth-footer">
+        <button id="closeAuth" class="btn ghost small" style="margin-top: 12px; border: none;">Close</button>
       </div>
     </div>
   </div>

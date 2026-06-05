@@ -11,7 +11,10 @@ const state = {
   activeReportId: null,
   userMarker: null,
   apiBase: null,
-  apiEnabled: false
+  apiEnabled: false,
+  // Auth state
+  accessToken: null,
+  currentUser: null
 };
 
 const elements = {
@@ -59,7 +62,29 @@ const elements = {
   submitClean: document.getElementById('submitClean'),
   cancelClean: document.getElementById('cancelClean'),
   closeClean: document.getElementById('closeClean'),
-  toast: document.getElementById('toast')
+  toast: document.getElementById('toast'),
+  
+  // Auth Elements
+  loginBtn: document.getElementById('loginBtn'),
+  userIndicator: document.getElementById('userIndicator'),
+  userAvatar: document.getElementById('userAvatar'),
+  userName: document.getElementById('userName'),
+  logoutBtn: document.getElementById('logoutBtn'),
+  authModal: document.getElementById('authModal'),
+  tabLogin: document.getElementById('tabLogin'),
+  tabSignup: document.getElementById('tabSignup'),
+  loginForm: document.getElementById('loginForm'),
+  signupForm: document.getElementById('signupForm'),
+  loginEmail: document.getElementById('loginEmail'),
+  loginPassword: document.getElementById('loginPassword'),
+  signupUsername: document.getElementById('signupUsername'),
+  signupEmail: document.getElementById('signupEmail'),
+  signupPassword: document.getElementById('signupPassword'),
+  loginError: document.getElementById('loginError'),
+  signupError: document.getElementById('signupError'),
+  submitLogin: document.getElementById('submitLogin'),
+  submitSignup: document.getElementById('submitSignup'),
+  closeAuth: document.getElementById('closeAuth')
 };
 
 function loadDB() {
@@ -88,30 +113,78 @@ function buildApiCandidates() {
   const stored = localStorage.getItem(`${storageKey}_api`);
   const candidates = [
     stored,
+    window.location.origin,
     'http://localhost:5210',
     'https://localhost:7210',
     'http://localhost:5000',
     'https://localhost:5001'
   ];
-  return Array.from(new Set(candidates.filter(Boolean)));
+  return Array.from(new Set(candidates.filter(c => c && c !== 'null')));
 }
 
-async function fetchJson(url, options = {}, timeoutMs = 4000) {
+async function fetchJson(url, options = {}, timeoutMs = 8000) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  // Setup headers
+  const headers = new Headers(options.headers || {});
+  
+  // Attach Access Token if available
+  if (state.accessToken) {
+    headers.set('Authorization', `Bearer ${state.accessToken}`);
+  }
+  
+  // Attach CSRF Token for state-changing requests
+  const method = (options.method || 'GET').toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD') {
+    const xsrfCookie = document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN='));
+    if (xsrfCookie) {
+      headers.set('X-XSRF-TOKEN', decodeURIComponent(xsrfCookie.split('=')[1]));
+    }
+  }
+
+  // Ensure credentials (cookies) are included
+  options.credentials = 'include';
+  options.headers = headers;
+
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+    
+    // Handle 401 Unauthorized globally
+    if (response.status === 401 && !url.includes('/auth/refresh')) {
+      const refreshed = await auth.refresh();
+      if (refreshed) {
+        // Retry the original request with the new token
+        headers.set('Authorization', `Bearer ${state.accessToken}`);
+        const retryResponse = await fetch(url, { ...options, headers, signal: controller.signal });
+        return handleFetchResponse(retryResponse);
+      } else {
+        auth.showLogin();
+        throw new Error('Unauthorized');
+      }
     }
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      return await response.json();
-    }
-    return null;
+    
+    return handleFetchResponse(response);
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function handleFetchResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+  if (!response.ok) {
+    let errorMsg = `HTTP ${response.status}`;
+    if (contentType.includes('application/json')) {
+      const errBody = await response.json();
+      if (errBody.error) errorMsg = errBody.error;
+    }
+    throw new Error(errorMsg);
+  }
+  
+  if (contentType.includes('application/json')) {
+    return await response.json();
+  }
+  return null;
 }
 
 async function detectApiBase() {
@@ -164,6 +237,136 @@ async function markCleanApi(reportId, payload) {
     body: JSON.stringify(payload)
   });
 }
+
+// --- Auth Module ---
+const auth = {
+  refreshTimer: null,
+
+  updateUI() {
+    if (state.currentUser) {
+      elements.userIndicator.classList.remove('hidden');
+      elements.loginBtn.classList.add('hidden');
+      elements.userName.textContent = state.currentUser.username;
+      elements.userAvatar.textContent = state.currentUser.username.substring(0, 1).toUpperCase();
+      
+      // Enable reporting features
+      elements.reportBtn.classList.remove('hidden');
+    } else {
+      elements.userIndicator.classList.add('hidden');
+      elements.loginBtn.classList.remove('hidden');
+      elements.reportBtn.classList.add('hidden');
+    }
+  },
+
+  showLogin() {
+    elements.loginError.textContent = '';
+    elements.signupError.textContent = '';
+    elements.loginPassword.value = '';
+    elements.signupPassword.value = '';
+    openModal(elements.authModal);
+  },
+
+  hideAuth() {
+    closeModal(elements.authModal);
+  },
+
+  switchTab(tab) {
+    if (tab === 'login') {
+      elements.tabLogin.classList.add('active');
+      elements.tabSignup.classList.remove('active');
+      elements.loginForm.classList.remove('hidden');
+      elements.signupForm.classList.add('hidden');
+    } else {
+      elements.tabSignup.classList.add('active');
+      elements.tabLogin.classList.remove('active');
+      elements.signupForm.classList.remove('hidden');
+      elements.loginForm.classList.add('hidden');
+    }
+  },
+
+  scheduleRefresh() {
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    // Refresh 1 minute before the 15-minute expiry (14 minutes)
+    this.refreshTimer = setTimeout(() => this.refresh(), 14 * 60 * 1000);
+  },
+
+  async handleAuthResponse(data) {
+    if (data && data.accessToken && data.user) {
+      state.accessToken = data.accessToken;
+      state.currentUser = data.user;
+      this.updateUI();
+      this.hideAuth();
+      this.scheduleRefresh();
+      return true;
+    }
+    return false;
+  },
+
+  async login(email, password) {
+    elements.submitLogin.disabled = true;
+    elements.loginError.textContent = '';
+    try {
+      const data = await fetchJson(`${state.apiBase}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      await this.handleAuthResponse(data);
+      showToast(`Welcome back, ${state.currentUser.username}!`);
+    } catch (err) {
+      elements.loginError.textContent = err.message || 'Login failed.';
+    } finally {
+      elements.submitLogin.disabled = false;
+    }
+  },
+
+  async signup(username, email, password) {
+    elements.submitSignup.disabled = true;
+    elements.signupError.textContent = '';
+    try {
+      const data = await fetchJson(`${state.apiBase}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      // Signup returns token but not refresh cookie. We need them to login.
+      showToast('Account created! Please log in.');
+      this.switchTab('login');
+      elements.loginEmail.value = email;
+      elements.loginPassword.value = '';
+    } catch (err) {
+      elements.signupError.textContent = err.message || 'Signup failed.';
+    } finally {
+      elements.submitSignup.disabled = false;
+    }
+  },
+
+  async refresh() {
+    if (!state.apiEnabled) return false;
+    try {
+      const data = await fetchJson(`${state.apiBase}/api/auth/refresh`, { method: 'POST' });
+      return await this.handleAuthResponse(data);
+    } catch (err) {
+      state.accessToken = null;
+      state.currentUser = null;
+      this.updateUI();
+      return false;
+    }
+  },
+
+  async logout() {
+    try {
+      await fetchJson(`${state.apiBase}/api/auth/logout`, { method: 'POST' });
+    } catch (e) {
+      // Ignore errors on logout
+    }
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    state.accessToken = null;
+    state.currentUser = null;
+    this.updateUI();
+    showToast('Logged out successfully.');
+  }
+};
 
 function initMap() {
   const defaultCenter = state.db.lastCenter || [42.6977, 23.3219];
@@ -371,6 +574,20 @@ function openDetail(reportId) {
     elements.afterBlock.classList.add('hidden');
     elements.detailCleaned.classList.add('hidden');
     elements.markClean.classList.remove('hidden');
+    
+    // Disable clean button if not logged in
+    if (!state.currentUser) {
+      elements.markClean.disabled = true;
+      elements.markClean.title = "Login required to mark as cleaned";
+      elements.markClean.classList.add('ghost');
+      elements.markClean.classList.remove('primary');
+    } else {
+      elements.markClean.disabled = false;
+      elements.markClean.title = "";
+      elements.markClean.classList.remove('ghost');
+      elements.markClean.classList.add('primary');
+    }
+    
     elements.markClean.dataset.reportId = report.id;
   }
 
@@ -577,6 +794,30 @@ function bindUI() {
   document.querySelectorAll('.tag-button').forEach(btn => {
     btn.addEventListener('click', () => btn.classList.toggle('selected'));
   });
+
+  // Auth bindings
+  elements.loginBtn.addEventListener('click', () => auth.showLogin());
+  elements.logoutBtn.addEventListener('click', () => auth.logout());
+  elements.closeAuth.addEventListener('click', () => auth.hideAuth());
+  
+  elements.tabLogin.addEventListener('click', () => auth.switchTab('login'));
+  elements.tabSignup.addEventListener('click', () => auth.switchTab('signup'));
+
+  elements.submitLogin.addEventListener('click', () => {
+    if (elements.loginForm.checkValidity()) {
+      auth.login(elements.loginEmail.value, elements.loginPassword.value);
+    } else {
+      elements.loginForm.reportValidity();
+    }
+  });
+
+  elements.submitSignup.addEventListener('click', () => {
+    if (elements.signupForm.checkValidity()) {
+      auth.signup(elements.signupUsername.value, elements.signupEmail.value, elements.signupPassword.value);
+    } else {
+      elements.signupForm.reportValidity();
+    }
+  });
 }
 
 async function init() {
@@ -586,6 +827,11 @@ async function init() {
   renderMarkers();
   updateProgress();
   await syncFromApi();
+  
+  // Try to silently restore session
+  if (state.apiEnabled) {
+    await auth.refresh();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

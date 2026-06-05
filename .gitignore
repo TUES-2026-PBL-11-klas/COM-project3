@@ -12,3 +12,4 @@ obj/
 *.vs/
 *.sln
 *.suo
+k8s/secrets.yaml

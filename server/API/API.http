@@ -1,17 +1,62 @@
 @API_HostAddress = http://localhost:5210
 
+### Health check
 GET {{API_HostAddress}}/api/cleanmap/health
 Accept: application/json
 
 ###
 
+### Get all reports (public)
 GET {{API_HostAddress}}/api/cleanmap/reports
 Accept: application/json
 
 ###
 
+### Signup
+POST {{API_HostAddress}}/api/auth/signup
+Content-Type: application/json
+
+{
+	"username": "testuser",
+	"email": "test@example.com",
+	"password": "Password1"
+}
+
+###
+
+### Login
+POST {{API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+	"email": "test@example.com",
+	"password": "Password1"
+}
+
+###
+
+### Refresh token (uses HttpOnly cookie automatically)
+POST {{API_HostAddress}}/api/auth/refresh
+
+###
+
+### Get current user (requires Bearer token)
+# Replace <ACCESS_TOKEN> with the token from login/signup response
+GET {{API_HostAddress}}/api/auth/me
+Authorization: Bearer <ACCESS_TOKEN>
+
+###
+
+### Logout (uses HttpOnly cookie automatically)
+POST {{API_HostAddress}}/api/auth/logout
+
+###
+
+### Create report (requires auth + CSRF token)
 POST {{API_HostAddress}}/api/cleanmap/reports
 Content-Type: application/json
+Authorization: Bearer <ACCESS_TOKEN>
+X-XSRF-TOKEN: <XSRF_TOKEN_FROM_COOKIE>
 
 {
 	"lat": 42.6977,
@@ -25,8 +70,11 @@ Content-Type: application/json
 
 ###
 
+### Mark as cleaned (requires auth + CSRF token)
 POST {{API_HostAddress}}/api/cleanmap/reports/rep_example/clean
 Content-Type: application/json
+Authorization: Bearer <ACCESS_TOKEN>
+X-XSRF-TOKEN: <XSRF_TOKEN_FROM_COOKIE>
 
 {
 	"photoAfter": "data:image/jpeg;base64,PLACEHOLDER"
