@@ -1,5 +1,5 @@
-// ---- Config ----
 const API_CANDIDATES = [
+  'https://com-project3.onrender.com',
   'http://localhost:5432',
   'http://localhost:30543',
   'http://localhost:5210',
@@ -16,13 +16,11 @@ let API_BASE = localStorage.getItem('cm_api_base') || '';
 let currentUserId = localStorage.getItem('cm_user_id') || '';
 let currentTeam = null;
 
-// ---- Init ----
 document.getElementById('navUserLabel').textContent =
   currentUserId ? `You: ${currentUserId}` : '';
 
 detectApiAndLoad();
 
-// ---- API detection ----
 async function detectApiAndLoad() {
   const candidates = API_CANDIDATES.slice();
   if (API_BASE && !candidates.includes(API_BASE)) candidates.unshift(API_BASE);
@@ -152,7 +150,6 @@ async function removeMember(targetUserId) {
   }
 }
 
-// ---- Images ----
 async function loadImages() {
   const res = await fetch(`${API_BASE}/api/teams/${encodeURIComponent(teamId)}/images`);
   const images = await res.json();
@@ -208,7 +205,6 @@ async function uploadImage() {
   }
 }
 
-// ---- Helpers ----
 function showToast(message, isError = false) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
