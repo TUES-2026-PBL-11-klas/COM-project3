@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cleanmap-api
+  labels:
+    app: cleanmap-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cleanmap-api
+  template:
+    metadata:
+      labels:
+        app: cleanmap-api
+    spec:
+      containers:
+        - name: cleanmap-api
+          image: cleanmap-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: cleanmap-config
+                  key: ASPNETCORE_ENVIRONMENT
+            - name: CleanMapDatabase__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: cleanmap-secret
+                  key: mongodb-connection-string
+            - name: CleanMapDatabase__DatabaseName
+              valueFrom:
+                configMapKeyRef:
+                  name: cleanmap-config
+                  key: CleanMapDatabase__DatabaseName
+            - name: CleanMapDatabase__ReportsCollectionName
+              valueFrom:
+                configMapKeyRef:
+                  name: cleanmap-config
+                  key: CleanMapDatabase__ReportsCollectionName
+          readinessProbe:
+            httpGet:
+              path: /api/cleanmap/health
+              port: 5432
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/cleanmap/health
+              port: 5432
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/wwwroot/uploads
+      volumes:
+        - name: uploads
+          emptyDir: {}
+          # For production: replace emptyDir with a PersistentVolumeClaim:
+          # persistentVolumeClaim:
+          #   claimName: cleanmap-uploads-pvc

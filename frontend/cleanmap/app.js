@@ -100,6 +100,7 @@ function buildApiCandidates() {
   const candidates = [
     stored,
     'http://localhost:5432',
+    'http://localhost:30543',
     'http://localhost:5210',
     'https://localhost:7210',
     'http://localhost:5000',

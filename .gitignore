@@ -13,3 +13,5 @@ obj/
 *.sln
 *.suo
 *.json
+secret.yaml
+secret*.yaml

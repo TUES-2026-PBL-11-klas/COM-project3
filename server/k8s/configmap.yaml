@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cleanmap-config
+  labels:
+    app: cleanmap-api
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  CleanMapDatabase__DatabaseName: "nexora"
+  CleanMapDatabase__ReportsCollectionName: "reports"

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Detail — CleanMap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="teams.css" />
+</head>
+<body class="teams-page">
+
+<nav class="teams-nav">
+  <a class="teams-nav-logo" href="teams.html">← Teams</a>
+  <span class="teams-nav-title" id="navTeamName">Team</span>
+  <span id="navUserLabel" class="user-label small"></span>
+</nav>
+
+<main class="teams-main" id="teamContent" style="display:none">
+  <div class="teams-header" id="teamHeader"></div>
+
+  <div class="detail-grid">
+    <!-- Members card -->
+    <section class="detail-card">
+      <h3 class="card-title">Members</h3>
+      <div id="membersList"></div>
+      <div class="add-member-row" id="addMemberCard" style="display:none">
+        <input type="text" id="newMemberId" placeholder="User ID to add" />
+        <button class="btn-primary btn-sm" onclick="addMember()">Add</button>
+      </div>
+    </section>
+
+    <!-- Images card -->
+    <section class="detail-card">
+      <h3 class="card-title">Team Images</h3>
+      <div id="imagesGrid" class="images-grid"></div>
+      <div class="upload-row">
+        <input type="file" id="imageFile" accept=".jpg,.jpeg,.png,.webp" />
+        <input type="text" id="imageNotes" placeholder="Notes (optional)" />
+        <button class="btn-primary btn-sm" onclick="uploadImage()">Upload</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="teams-loading" id="pageLoader"><div class="spinner"></div></div>
+
+<div id="toast" class="toast"></div>
+
+<script src="team-detail.js?v=2"></script>
+</body>
+</html>

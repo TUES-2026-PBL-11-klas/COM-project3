@@ -12,9 +12,15 @@ public static class WebApplicationExtensions
         }
 
         app.UseHttpsRedirection();
+
+        // Ensure wwwroot exists before serving static files (team image uploads)
+        var wwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+        Directory.CreateDirectory(wwwroot);
+        app.UseStaticFiles();
         app.UseCors(CleanMapCorsPolicyNames.CleanMap);
         app.UseMiddleware<CleanMapExceptionMiddleware>();
         app.MapCleanMapEndpoints();
+        app.MapTeamEndpoints();
 
         return app;
     }

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teams — CleanMap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="teams.css" />
+</head>
+<body class="teams-page">
+
+<nav class="teams-nav">
+  <a class="teams-nav-logo" href="index.html">← CleanMap</a>
+  <span class="teams-nav-title">Teams</span>
+  <button class="btn-primary btn-sm" onclick="openCreateModal()">+ New Team</button>
+</nav>
+
+<main class="teams-main">
+  <div class="teams-header">
+    <h1>My <span class="accent">Teams</span></h1>
+    <p class="teams-subtitle">Collaborate to keep your area clean</p>
+  </div>
+
+  <div id="userId-bar" class="user-bar">
+    <label>Your user ID:</label>
+    <input id="userIdInput" type="text" placeholder="e.g. alice" />
+    <button class="btn-primary btn-sm" onclick="setUserId()">Set</button>
+    <span id="currentUserLabel" class="user-label"></span>
+  </div>
+
+  <div id="teamsContainer" class="teams-grid-wrap">
+    <div class="teams-loading"><div class="spinner"></div></div>
+  </div>
+</main>
+
+<!-- Create Team Modal -->
+<div class="t-overlay" id="createModal" onclick="handleOverlayClick(event)">
+  <div class="t-modal">
+    <div class="t-modal-header">
+      <h2>Create a New Team</h2>
+      <button class="close-btn" onclick="closeCreateModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <label>Team Name *</label>
+      <input type="text" id="teamName" placeholder="e.g. Green Warriors" maxlength="100" />
+    </div>
+    <div class="form-row">
+      <label>Description</label>
+      <textarea id="teamDesc" placeholder="What does your team do?"></textarea>
+    </div>
+    <div class="t-modal-actions">
+      <button class="btn-ghost" onclick="closeCreateModal()">Cancel</button>
+      <button class="btn-primary" onclick="createTeam()">Create</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="teams.js?v=2"></script>
+</body>
+</html>

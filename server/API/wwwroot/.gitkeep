@@ -1,0 +1,2 @@
+# This directory is the static files root for the API.
+# Uploaded team images are stored under uploads/teams/{teamId}/
