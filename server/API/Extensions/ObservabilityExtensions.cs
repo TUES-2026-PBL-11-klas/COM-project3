@@ -1,4 +1,5 @@
 using Core.Observability;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -14,6 +15,10 @@ public static class ObservabilityExtensions
 
         var endpoint = config["Observability:OtlpEndpoint"]
             ?? config["OTEL_EXPORTER_OTLP_ENDPOINT"];
+        var headers = config["Observability:OtlpHeaders"]
+            ?? config["OTEL_EXPORTER_OTLP_HEADERS"];
+        var protocolValue = config["Observability:OtlpProtocol"]
+            ?? config["OTEL_EXPORTER_OTLP_PROTOCOL"];
 
         var enabled = config.GetValue("Observability:Enabled", !string.IsNullOrWhiteSpace(endpoint));
         if (!enabled)
@@ -40,7 +45,7 @@ public static class ObservabilityExtensions
             options.SetResourceBuilder(resourceBuilder);
             options.AddOtlpExporter(otlp =>
             {
-                otlp.Endpoint = new Uri(endpoint);
+                ConfigureOtlpExporter(otlp, endpoint, headers, protocolValue);
             });
         });
 
@@ -57,7 +62,7 @@ public static class ObservabilityExtensions
                     .AddSource(CleanMapObservability.ActivitySourceName)
                     .AddOtlpExporter(otlp =>
                     {
-                        otlp.Endpoint = new Uri(endpoint);
+                        ConfigureOtlpExporter(otlp, endpoint, headers, protocolValue);
                     });
             })
             .WithMetrics(metricsProviderBuilder =>
@@ -70,10 +75,48 @@ public static class ObservabilityExtensions
                     .AddMeter(CleanMapObservability.MeterName)
                     .AddOtlpExporter(otlp =>
                     {
-                        otlp.Endpoint = new Uri(endpoint);
+                        ConfigureOtlpExporter(otlp, endpoint, headers, protocolValue);
                     });
             });
 
         return builder;
+    }
+
+    private static void ConfigureOtlpExporter(
+        OtlpExporterOptions otlp,
+        string endpoint,
+        string? headers,
+        string? protocolValue)
+    {
+        otlp.Endpoint = new Uri(endpoint);
+
+        if (!string.IsNullOrWhiteSpace(headers))
+        {
+            otlp.Headers = headers;
+        }
+
+        var protocol = ParseOtlpProtocol(protocolValue);
+        if (protocol.HasValue)
+        {
+            otlp.Protocol = protocol.Value;
+        }
+    }
+
+    private static OtlpExportProtocol? ParseOtlpProtocol(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "grpc" => OtlpExportProtocol.Grpc,
+            "http/protobuf" => OtlpExportProtocol.HttpProtobuf,
+            "http_protobuf" => OtlpExportProtocol.HttpProtobuf,
+            "httpprotobuf" => OtlpExportProtocol.HttpProtobuf,
+            _ => null
+        };
     }
 }
