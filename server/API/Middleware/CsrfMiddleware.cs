@@ -46,8 +46,8 @@ public class CsrfMiddleware
         // Only validate on state-changing methods
         if (!SafeMethods.Contains(method))
         {
-            // Skip excluded paths
-            if (!ExcludedPaths.Contains(path))
+            // Skip excluded paths and team endpoints (which are migrating to auth)
+            if (!ExcludedPaths.Contains(path) && !path.StartsWith("/api/teams", StringComparison.OrdinalIgnoreCase))
             {
                 var cookieValue = context.Request.Cookies[CsrfCookieName];
                 var headerValue = context.Request.Headers[CsrfHeaderName].FirstOrDefault();

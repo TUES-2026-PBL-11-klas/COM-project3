@@ -1,6 +1,7 @@
 using Core.Teams;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace API.Endpoints;
 
@@ -14,12 +15,13 @@ public static class TeamEndpoints
         var group = app.MapGroup("/api/teams");
 
         // GET /api/teams/my?userId=xxx
-        group.MapGet("/my", async (string userId, ITeamService service, CancellationToken ct) =>
+        group.MapGet("/my", async (string? userId, ITeamService service, HttpContext httpContext, CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            var uid = GetUserId(userId, httpContext);
+            if (string.IsNullOrWhiteSpace(uid))
                 return Results.BadRequest(new { error = "userId is required." });
 
-            var teams = await service.GetMyTeamsAsync(userId, ct);
+            var teams = await service.GetMyTeamsAsync(uid, ct);
             return Results.Ok(teams.Select(ToResponse));
         });
 
@@ -31,45 +33,49 @@ public static class TeamEndpoints
         });
 
         // POST /api/teams?userId=xxx
-        group.MapPost("/", async (CreateTeamRequest request, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapPost("/", async (CreateTeamRequest request, string? userId, ITeamService service, HttpContext httpContext, CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            var uid = GetUserId(userId, httpContext);
+            if (string.IsNullOrWhiteSpace(uid))
                 return Results.BadRequest(new { error = "userId is required." });
 
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.BadRequest(new { error = "Team name is required." });
 
-            var team = await service.CreateTeamAsync(userId, request, ct);
+            var team = await service.CreateTeamAsync(uid, request, ct);
             return Results.Created($"/api/teams/{team.Id}", ToResponse(team));
         });
 
         // POST /api/teams/{id}/members?userId=xxx
-        group.MapPost("/{id}/members", async (string id, AddMemberRequest request, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapPost("/{id}/members", async (string id, AddMemberRequest request, string? userId, ITeamService service, HttpContext httpContext, CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            var uid = GetUserId(userId, httpContext);
+            if (string.IsNullOrWhiteSpace(uid))
                 return Results.BadRequest(new { error = "userId is required." });
 
-            var (success, error) = await service.AddMemberAsync(id, userId, request, ct);
+            var (success, error) = await service.AddMemberAsync(id, uid, request, ct);
             return success ? Results.Ok() : Results.BadRequest(new { error });
         });
 
         // DELETE /api/teams/{id}/members/{targetUserId}?userId=xxx
-        group.MapDelete("/{id}/members/{targetUserId}", async (string id, string targetUserId, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapDelete("/{id}/members/{targetUserId}", async (string id, string targetUserId, string? userId, ITeamService service, HttpContext httpContext, CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            var uid = GetUserId(userId, httpContext);
+            if (string.IsNullOrWhiteSpace(uid))
                 return Results.BadRequest(new { error = "userId is required." });
 
-            var (success, error) = await service.RemoveMemberAsync(id, userId, targetUserId, ct);
+            var (success, error) = await service.RemoveMemberAsync(id, uid, targetUserId, ct);
             return success ? Results.Ok() : Results.BadRequest(new { error });
         });
 
         // DELETE /api/teams/{id}?userId=xxx  (owner only)
-        group.MapDelete("/{id}", async (string id, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapDelete("/{id}", async (string id, string? userId, ITeamService service, HttpContext httpContext, CancellationToken ct) =>
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            var uid = GetUserId(userId, httpContext);
+            if (string.IsNullOrWhiteSpace(uid))
                 return Results.BadRequest(new { error = "userId is required." });
 
-            var (success, error) = await service.DeleteTeamAsync(id, userId, ct);
+            var (success, error) = await service.DeleteTeamAsync(id, uid, ct);
             return success ? Results.NoContent() : Results.BadRequest(new { error });
         });
 
@@ -83,14 +89,16 @@ public static class TeamEndpoints
         // POST /api/teams/{id}/images?userId=xxx&notes=xxx
         group.MapPost("/{id}/images", async (
             string id,
-            string userId,
+            string? userId,
             IFormFile file,
             ITeamImageService imageService,
             IWebHostEnvironment env,
+            HttpContext httpContext,
             CancellationToken ct,
             string? notes = null) =>
         {
-            if (string.IsNullOrWhiteSpace(userId))
+            var uid = GetUserId(userId, httpContext);
+            if (string.IsNullOrWhiteSpace(uid))
                 return Results.BadRequest(new { error = "userId is required." });
 
             if (file.Length == 0)
@@ -116,7 +124,7 @@ public static class TeamEndpoints
             }
 
             var imageUrl = $"/uploads/teams/{id}/{fileName}";
-            var (success, error, image) = await imageService.SaveImageAsync(id, userId, imageUrl, notes, ct);
+            var (success, error, image) = await imageService.SaveImageAsync(id, uid, imageUrl, notes, ct);
 
             if (!success)
             {
@@ -127,6 +135,14 @@ public static class TeamEndpoints
 
             return Results.Created($"/api/teams/{id}/images", ToImageResponse(image!));
         }).DisableAntiforgery();
+    }
+
+    private static string? GetUserId(string? queryUserId, HttpContext context)
+    {
+        var claimUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) 
+            ?? context.User.FindFirstValue("sub");
+        
+        return !string.IsNullOrWhiteSpace(claimUserId) ? claimUserId : queryUserId;
     }
 
     private static object ToResponse(Team team) => new

@@ -19,6 +19,12 @@ public static class WebApplicationExtensions
         app.UseCors(CleanMapCorsPolicyNames.CleanMap);
         app.UseMiddleware<RequestLoggingMiddleware>();
         app.UseMiddleware<CleanMapExceptionMiddleware>();
+        app.UseMiddleware<CsrfMiddleware>();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.MapAuthEndpoints();
         app.MapCleanMapEndpoints();
         app.MapTeamEndpoints();
 
