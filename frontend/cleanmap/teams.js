@@ -2,7 +2,6 @@ const API_BASE_DEFAULT = 'https://com-project3.onrender.com';
 const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 const API_CANDIDATES = [
-  API_BASE_DEFAULT,
   ...(IS_LOCAL ? [
     'http://localhost:5432',
     'http://localhost:30543',
@@ -10,7 +9,8 @@ const API_CANDIDATES = [
     'http://localhost:7210',
     'http://localhost:5000',
     'http://localhost:5001'
-  ] : [])
+  ] : []),
+  API_BASE_DEFAULT
 ];
 
 let API_BASE = localStorage.getItem('cm_api_base') || '';
@@ -18,12 +18,13 @@ if (!IS_LOCAL && (API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1
   API_BASE = '';
 }
 let currentUserId = localStorage.getItem('cm_user_id') || '';
+let currentUserName = '';
 
-document.getElementById('userIdInput').value = currentUserId;
 updateUserLabel();
+attachAuthButton();
 
 if (!currentUserId) {
-  showToast('Set your user ID above to get started.', false);
+  showToast('Tap Login to sign in or register.', false);
 }
 
 detectApiAndLoad();
@@ -46,11 +47,59 @@ async function detectApiAndLoad() {
   }
 
   if (!API_BASE) {
+    localStorage.removeItem('cm_api_base');
     document.getElementById('teamsContainer').innerHTML =
       `<div class="empty-state"><p>Could not connect to API. Is the server running?</p></div>`;
     return;
   }
-  if (currentUserId) loadTeams();
+
+  await restoreUserState();
+
+  if (currentUserId) {
+    loadTeams();
+  } else {
+    window.location.href = 'login.html?next=teams.html';
+  }
+}
+
+async function restoreUserState() {
+  const savedUser = localStorage.getItem('cm_user');
+  const savedToken = localStorage.getItem('cm_access_token');
+
+  if (savedUser) {
+    try {
+      const parsed = JSON.parse(savedUser);
+      if (parsed?.id) {
+        currentUserId = parsed.id;
+        currentUserName = parsed?.username || '';
+        localStorage.setItem('cm_user_id', currentUserId);
+      }
+    } catch {
+      // ignore invalid saved user
+    }
+  }
+
+  if (!currentUserId && savedToken) {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${savedToken}` },
+        signal: AbortSignal.timeout(6000)
+      });
+      if (res.ok) {
+        const user = await res.json();
+        if (user?.id) {
+          currentUserId = user.id;
+          currentUserName = user?.username || '';
+          localStorage.setItem('cm_user_id', currentUserId);
+          localStorage.setItem('cm_user', JSON.stringify(user));
+        }
+      }
+    } catch {
+      // ignore restore failures
+    }
+  }
+
+  updateUserLabel();
 }
 
 function setUserId() {
@@ -64,7 +113,38 @@ function setUserId() {
 
 function updateUserLabel() {
   const el = document.getElementById('currentUserLabel');
-  el.textContent = currentUserId ? `Signed in as: ${currentUserId}` : '';
+  const userDisplay = currentUserName || currentUserId;
+  el.textContent = userDisplay ? `Signed in as: ${userDisplay}` : '';
+  const authBtn = document.getElementById('authBtn');
+  if (authBtn) {
+    authBtn.textContent = currentUserId ? 'Logout' : 'Login';
+  }
+}
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('cm_access_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function attachAuthButton() {
+  const authBtn = document.getElementById('authBtn');
+  if (!authBtn) return;
+
+  authBtn.addEventListener('click', () => {
+    if (currentUserId) {
+      localStorage.removeItem('cm_user_id');
+      localStorage.removeItem('cm_access_token');
+      localStorage.removeItem('cm_user');
+      currentUserId = '';
+      currentUserName = '';
+      updateUserLabel();
+      showToast('Logged out.');
+      document.getElementById('teamsContainer').innerHTML =
+        `<div class="empty-state"><p>Login to see your teams.</p></div>`;
+    } else {
+      window.location.href = `login.html?next=${encodeURIComponent('teams.html')}`;
+    }
+  });
 }
 
 async function loadTeams() {
@@ -73,7 +153,9 @@ async function loadTeams() {
     '<div class="teams-loading"><div class="spinner"></div></div>';
 
   try {
-    const res = await fetch(`${API_BASE}/api/teams/my?userId=${encodeURIComponent(currentUserId)}`);
+    const res = await fetch(`${API_BASE}/api/teams/my`, {
+      headers: getAuthHeaders()
+    });
     const teams = await res.json();
     renderTeams(teams);
   } catch {
@@ -146,9 +228,9 @@ async function createTeam() {
   if (!name) { showToast('Team name is required.', true); return; }
 
   try {
-    const res = await fetch(`${API_BASE}/api/teams?userId=${encodeURIComponent(currentUserId)}`, {
+    const res = await fetch(`${API_BASE}/api/teams`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ name, description }),
     });
 
@@ -171,8 +253,8 @@ async function deleteTeam(teamId, teamName) {
 
   try {
     const res = await fetch(
-      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}?userId=${encodeURIComponent(currentUserId)}`,
-      { method: 'DELETE' }
+      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}`,
+      { method: 'DELETE', headers: getAuthHeaders() }
     );
 
     if (!res.ok) {

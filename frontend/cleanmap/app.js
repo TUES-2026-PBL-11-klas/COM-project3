@@ -12,7 +12,11 @@ const state = {
   userMarker: null,
   apiBase: null,
   apiEnabled: false,
-  clusterLayers: []
+  clusterLayers: [],
+  auth: {
+    token: localStorage.getItem('cm_access_token'),
+    user: JSON.parse(localStorage.getItem('cm_user') || 'null')
+  }
 };
 
 const elements = {
@@ -89,10 +93,65 @@ function saveDB() {
   localStorage.setItem(storageKey, JSON.stringify(state.db));
 }
 
-function showToast(message) {
+function showToast(message, isError = false) {
   elements.toast.textContent = message;
-  elements.toast.classList.remove('hidden');
-  setTimeout(() => elements.toast.classList.add('hidden'), 2400);
+  elements.toast.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(elements.toast._timer);
+  elements.toast._timer = setTimeout(() => elements.toast.classList.remove('show'), 3000);
+}
+
+function getAuthHeaders() {
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+
+  if (state.auth.token) {
+    headers.Authorization = `Bearer ${state.auth.token}`;
+  }
+
+  return headers;
+}
+
+function authFetch(url, options = {}, timeoutMs = 6000) {
+  if (!state.auth.token) {
+    return Promise.reject(new Error('Login required.'));
+  }
+
+  return fetchJson(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...(options.headers || {})
+    }
+  }, timeoutMs);
+}
+
+function isAuthenticated() {
+  return !!state.auth.token && !!state.auth.user;
+}
+
+function updateAuthUi() {
+  const authBtn = document.getElementById('authBtn');
+  if (!authBtn) return;
+
+  if (isAuthenticated()) {
+    authBtn.textContent = 'Logout';
+  } else {
+    authBtn.textContent = 'Login';
+  }
+}
+
+function redirectToLogin(next = 'login.html') {
+  window.location.href = `login.html?next=${encodeURIComponent(next)}`;
+}
+
+function requireAuth(action) {
+  if (!isAuthenticated()) {
+    showToast('Login required before continuing.', true);
+    setTimeout(() => redirectToLogin(action), 800);
+    return false;
+  }
+  return true;
 }
 
 function buildApiCandidates() {
@@ -168,17 +227,15 @@ async function syncFromApi() {
 }
 
 async function createReportApi(report) {
-  return fetchJson(`${state.apiBase}/api/cleanmap/reports`, {
+  return authFetch(`${state.apiBase}/api/cleanmap/reports`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(report)
   }, 30000);
 }
 
 async function markCleanApi(reportId, payload) {
-  return fetchJson(`${state.apiBase}/api/cleanmap/reports/${encodeURIComponent(reportId)}/clean`, {
+  return authFetch(`${state.apiBase}/api/cleanmap/reports/${encodeURIComponent(reportId)}/clean`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   }, 30000);
 }
@@ -469,6 +526,7 @@ function ensureLocationForReport() {
 }
 
 function openReportModal() {
+  if (!requireAuth('login.html')) return;
   resetReportForm();
   openModal(elements.reportModal);
   locateUser(true);
@@ -594,6 +652,8 @@ function renderReviewList() {
 }
 
 function openCleanModal(reportId) {
+  if (!requireAuth('login.html')) return;
+
   const report = state.db.reports.find(r => r.id === reportId);
   if (!report) return;
 
@@ -823,6 +883,23 @@ function bindUI() {
   });
   elements.closePhotos.addEventListener('click', closePhotosModal);
 
+  const authBtn = document.getElementById('authBtn');
+  if (authBtn) {
+    authBtn.addEventListener('click', () => {
+      if (isAuthenticated()) {
+        localStorage.removeItem('cm_user_id');
+        localStorage.removeItem('cm_access_token');
+        localStorage.removeItem('cm_user');
+        state.auth.token = null;
+        state.auth.user = null;
+        updateAuthUi();
+        showToast('Logged out.');
+      } else {
+        redirectToLogin(window.location.pathname.replace(/^\//, '') || 'index.html');
+      }
+    });
+  }
+
   document.querySelectorAll('.tag-button').forEach(btn => {
     btn.addEventListener('click', () => btn.classList.toggle('selected'));
   });
@@ -832,10 +909,11 @@ async function init() {
   state.db = loadDB();
   initMap();
   bindUI();
+  updateAuthUi();
   renderMarkers();
   updateProgress();
   await syncFromApi();
-  if (state.apiEnabled) showToast('Connected to CleanMap server.');
+  if (state.apiEnabled) showToast('Connected to Nexora server.');
   window.addEventListener('beforeunload', stopCamera);
 }
 

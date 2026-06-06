@@ -8,5 +8,5 @@ class Handler(SimpleHTTPRequestHandler):
         return
 
 with TCPServer(("", PORT), Handler) as httpd:
-    print(f"Serving CleanMap at http://localhost:{PORT}")
+    print(f"Serving Nexora at http://localhost:{PORT}")
     httpd.serve_forever()
