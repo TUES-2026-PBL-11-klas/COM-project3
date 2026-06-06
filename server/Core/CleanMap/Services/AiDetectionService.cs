@@ -10,6 +10,12 @@ public class AiDetectionService(HttpClient httpClient, ILogger<AiDetectionServic
 {
     public async Task<IReadOnlyList<TrashDetection>> DetectTrashAsync(string base64Image, CancellationToken cancellationToken = default)
     {
+        if (httpClient.BaseAddress == null)
+        {
+            logger.LogWarning("AI Detection Service is disabled (BaseUrl is missing). Skipping trash detection.");
+            return [];
+        }
+
         try
         {
             // Remove data URI scheme prefix if present
@@ -42,7 +48,7 @@ public class AiDetectionService(HttpClient httpClient, ILogger<AiDetectionServic
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to call AI detection service.");
-            throw; // Rethrow to handle it in the caller logic if needed, or we can just return empty
+            return [];
         }
     }
 
