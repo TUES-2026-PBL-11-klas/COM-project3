@@ -150,9 +150,9 @@ kubectl get svc
 
 ### CI/CD (GitHub Actions)
 
-Pipeline triggers on push to `teams-features` and PRs to `main`:
+Pipeline triggers on push and PRs to `main`:
 
-1. **Build & Test** — restore, build, run 12 unit tests
+1. **Build & Test** — restore, build, run backend unit tests
 2. **Docker Build** — build image (runs only if tests pass)
 
 ### Security
