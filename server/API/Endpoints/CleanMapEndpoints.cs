@@ -50,7 +50,7 @@ public static class CleanMapEndpoints
             return result.IsSuccess
                 ? Results.Created($"/api/cleanmap/reports/{result.Report!.Id}", result.Report)
                 : Results.BadRequest(new { error = result.Error });
-        });
+        }).RequireAuthorization();
 
         group.MapPost("/reports/{id}/clean", async (
             string id,
@@ -65,7 +65,7 @@ public static class CleanMapEndpoints
 
             var report = await reports.MarkCleanAsync(id, input, cancellationToken);
             return report is null ? Results.NotFound() : Results.Ok(report);
-        });
+        }).RequireAuthorization();
 
         return endpoints;
     }

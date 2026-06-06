@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using API.Endpoints;
 using API.Middleware;
 
@@ -17,8 +18,11 @@ public static class WebApplicationExtensions
         Directory.CreateDirectory(wwwroot);
         app.UseStaticFiles();
         app.UseCors(CleanMapCorsPolicyNames.CleanMap);
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.UseMiddleware<RequestLoggingMiddleware>();
         app.UseMiddleware<CleanMapExceptionMiddleware>();
+        app.MapAuthEndpoints();
         app.MapCleanMapEndpoints();
         app.MapTeamEndpoints();
 

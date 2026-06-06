@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Core.Teams;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,28 +14,34 @@ public static class TeamEndpoints
     {
         var group = app.MapGroup("/api/teams");
 
-        // GET /api/teams/my?userId=xxx
-        group.MapGet("/my", async (string userId, ITeamService service, CancellationToken ct) =>
+        group.MapGet("/my", [Microsoft.AspNetCore.Authorization.Authorize] async (
+            HttpContext httpContext,
+            ITeamService service,
+            CancellationToken ct) =>
         {
+            var userId = GetUserId(httpContext);
             if (string.IsNullOrWhiteSpace(userId))
-                return Results.BadRequest(new { error = "userId is required." });
+                return Results.Unauthorized();
 
             var teams = await service.GetMyTeamsAsync(userId, ct);
             return Results.Ok(teams.Select(ToResponse));
         });
 
-        // GET /api/teams/{id}
         group.MapGet("/{id}", async (string id, ITeamService service, CancellationToken ct) =>
         {
             var team = await service.GetTeamByIdAsync(id, ct);
             return team is null ? Results.NotFound() : Results.Ok(ToResponse(team));
         });
 
-        // POST /api/teams?userId=xxx
-        group.MapPost("/", async (CreateTeamRequest request, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapPost("/", [Microsoft.AspNetCore.Authorization.Authorize] async (
+            HttpContext httpContext,
+            CreateTeamRequest request,
+            ITeamService service,
+            CancellationToken ct) =>
         {
+            var userId = GetUserId(httpContext);
             if (string.IsNullOrWhiteSpace(userId))
-                return Results.BadRequest(new { error = "userId is required." });
+                return Results.Unauthorized();
 
             if (string.IsNullOrWhiteSpace(request.Name))
                 return Results.BadRequest(new { error = "Team name is required." });
@@ -43,31 +50,45 @@ public static class TeamEndpoints
             return Results.Created($"/api/teams/{team.Id}", ToResponse(team));
         });
 
-        // POST /api/teams/{id}/members?userId=xxx
-        group.MapPost("/{id}/members", async (string id, AddMemberRequest request, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapPost("/{id}/members", [Microsoft.AspNetCore.Authorization.Authorize] async (
+            string id,
+            HttpContext httpContext,
+            AddMemberRequest request,
+            ITeamService service,
+            CancellationToken ct) =>
         {
+            var userId = GetUserId(httpContext);
             if (string.IsNullOrWhiteSpace(userId))
-                return Results.BadRequest(new { error = "userId is required." });
+                return Results.Unauthorized();
 
             var (success, error) = await service.AddMemberAsync(id, userId, request, ct);
             return success ? Results.Ok() : Results.BadRequest(new { error });
         });
 
-        // DELETE /api/teams/{id}/members/{targetUserId}?userId=xxx
-        group.MapDelete("/{id}/members/{targetUserId}", async (string id, string targetUserId, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapDelete("/{id}/members/{targetUserId}", [Microsoft.AspNetCore.Authorization.Authorize] async (
+            string id,
+            string targetUserId,
+            HttpContext httpContext,
+            ITeamService service,
+            CancellationToken ct) =>
         {
+            var userId = GetUserId(httpContext);
             if (string.IsNullOrWhiteSpace(userId))
-                return Results.BadRequest(new { error = "userId is required." });
+                return Results.Unauthorized();
 
             var (success, error) = await service.RemoveMemberAsync(id, userId, targetUserId, ct);
             return success ? Results.Ok() : Results.BadRequest(new { error });
         });
 
-        // DELETE /api/teams/{id}?userId=xxx  (owner only)
-        group.MapDelete("/{id}", async (string id, string userId, ITeamService service, CancellationToken ct) =>
+        group.MapDelete("/{id}", [Microsoft.AspNetCore.Authorization.Authorize] async (
+            string id,
+            HttpContext httpContext,
+            ITeamService service,
+            CancellationToken ct) =>
         {
+            var userId = GetUserId(httpContext);
             if (string.IsNullOrWhiteSpace(userId))
-                return Results.BadRequest(new { error = "userId is required." });
+                return Results.Unauthorized();
 
             var (success, error) = await service.DeleteTeamAsync(id, userId, ct);
             return success ? Results.NoContent() : Results.BadRequest(new { error });
@@ -127,6 +148,13 @@ public static class TeamEndpoints
 
             return Results.Created($"/api/teams/{id}/images", ToImageResponse(image!));
         }).DisableAntiforgery();
+    }
+
+    private static string? GetUserId(HttpContext httpContext)
+    {
+        var user = httpContext.User;
+        return user.FindFirstValue(ClaimTypes.NameIdentifier)
+               ?? user.FindFirstValue("sub");
     }
 
     private static object ToResponse(Team team) => new
