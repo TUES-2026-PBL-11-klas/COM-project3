@@ -17,9 +17,10 @@ const params = new URLSearchParams(window.location.search);
 const teamId = params.get('id');
 if (!teamId) window.location.href = 'teams.html';
 
-let API_BASE = localStorage.getItem('cm_api_base') || '';
+let API_BASE = localStorage.getItem('cm_api_base') || API_BASE_DEFAULT;
 if (!IS_LOCAL && (API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1'))) {
-  API_BASE = '';
+  API_BASE = API_BASE_DEFAULT;
+  localStorage.setItem('cm_api_base', API_BASE);
 }
 let currentUserId = localStorage.getItem('cm_user_id') || '';
 let currentUserName = '';
