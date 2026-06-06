@@ -1,6 +1,7 @@
 using Core.DTOs;
 using Core.Services;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Endpoints;
 
@@ -90,11 +91,13 @@ public static class AuthEndpoints
         var user = httpContext.User;
 
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)
+                  ?? user.FindFirstValue(ClaimTypes.Name)
                   ?? user.FindFirstValue("sub");
         var email = user.FindFirstValue(ClaimTypes.Email)
                   ?? user.FindFirstValue("email");
         var role = user.FindFirstValue(ClaimTypes.Role);
-        var username = user.FindFirstValue("username");
+        var username = user.FindFirstValue("username")
+                  ?? user.FindFirstValue(ClaimTypes.Name);
 
         if (userId is null)
             return Results.Unauthorized();

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Nexora</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='12'%3EN%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-page">
+  <main class="teams-main auth-page">
+    <nav class="teams-nav">
+      <a class="teams-nav-logo" href="index.html">← Nexora</a>
+      <span class="teams-nav-title">Login / Register</span>
+    </nav>
+
+    <section class="auth-card">
+      <h1>Sign In or Create Account</h1>
+      <p>Login before reporting pollution or managing teams.</p>
+
+      <div class="auth-toggle">
+        <button id="tabLogin" class="btn-ghost btn-sm active">Login</button>
+        <button id="tabSignup" class="btn-ghost btn-sm">Sign Up</button>
+      </div>
+
+      <form id="loginForm" class="auth-form">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" required />
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" placeholder="Your password" required />
+        <button type="button" id="submitLogin" class="btn-primary">Login</button>
+        <div id="loginError" class="auth-error"></div>
+      </form>
+
+      <form id="signupForm" class="auth-form hidden">
+        <label for="signupUsername">Username</label>
+        <input id="signupUsername" type="text" placeholder="Your username" minlength="3" required />
+        <label for="signupEmail">Email</label>
+        <input id="signupEmail" type="email" placeholder="you@example.com" required />
+        <label for="signupPassword">Password</label>
+        <input id="signupPassword" type="password" placeholder="At least 8 chars, letters + numbers" minlength="8" required />
+        <button type="button" id="submitSignup" class="btn-primary">Register</button>
+        <div id="signupError" class="auth-error"></div>
+      </form>
+
+      <div class="auth-footer">
+        <p>After login you can add reports, clean trash, and manage teams.</p>
+      </div>
+    </section>
+
+    <div id="toast" class="toast"></div>
+  </main>
+
+  <script src="login.js"></script>
+</body>
+</html>

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Detail — CleanMap</title>
+  <title>Team Detail — Nexora</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='12'%3EN%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -15,6 +16,7 @@
   <a class="teams-nav-logo" href="teams.html">← Teams</a>
   <span class="teams-nav-title" id="navTeamName">Team</span>
   <span id="navUserLabel" class="user-label small"></span>
+  <button id="authBtn" class="btn ghost btn-sm">Login</button>
 </nav>
 
 <main class="teams-main" id="teamContent" style="display:none">
@@ -26,7 +28,7 @@
       <h3 class="card-title">Members</h3>
       <div id="membersList"></div>
       <div class="add-member-row" id="addMemberCard" style="display:none">
-        <input type="text" id="newMemberId" placeholder="User ID to add" />
+        <input type="text" id="newMemberId" placeholder="User ID or username to add" />
         <button class="btn-primary btn-sm" onclick="addMember()">Add</button>
       </div>
     </section>
@@ -49,6 +51,5 @@
 <div id="toast" class="toast"></div>
 
 <script src="team-detail.js?v=2"></script>
-<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

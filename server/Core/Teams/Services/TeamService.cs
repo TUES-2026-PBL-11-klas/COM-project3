@@ -1,10 +1,17 @@
+using Core.Repositories;
+
 namespace Core.Teams.Services;
 
 public sealed class TeamService : ITeamService
 {
     private readonly ITeamRepository _repository;
+    private readonly IUserRepository _userRepository;
 
-    public TeamService(ITeamRepository repository) => _repository = repository;
+    public TeamService(ITeamRepository repository, IUserRepository userRepository)
+    {
+        _repository = repository;
+        _userRepository = userRepository;
+    }
 
     public Task<Team?> GetTeamByIdAsync(string id, CancellationToken ct) =>
         _repository.GetByIdAsync(id, ct);
@@ -28,10 +35,20 @@ public sealed class TeamService : ITeamService
         var requester = team.Members.FirstOrDefault(m => m.UserId == requestingUserId);
         if (requester?.Role != TeamRole.Owner) return (false, "Only the team owner can add members.");
 
-        if (team.Members.Any(m => m.UserId == request.UserId))
+        var targetUserId = request.UserId;
+        if (!await _userRepository.ExistsByIdAsync(targetUserId))
+        {
+            var userByName = await _userRepository.GetByUsernameAsync(targetUserId);
+            if (userByName is null)
+                return (false, "User does not exist.");
+
+            targetUserId = userByName.Id;
+        }
+
+        if (team.Members.Any(m => m.UserId == targetUserId))
             return (false, "User is already a member of this team.");
 
-        var member = new TeamMember { UserId = request.UserId, Role = TeamRole.Member, JoinedAt = DateTime.UtcNow };
+        var member = new TeamMember { UserId = targetUserId, Role = TeamRole.Member, JoinedAt = DateTime.UtcNow };
         var success = await _repository.AddMemberAsync(teamId, member, ct);
         return (success, success ? null : "Failed to add member.");
     }

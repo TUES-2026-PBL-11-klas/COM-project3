@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Teams — CleanMap</title>
+  <title>Teams — Nexora</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='12'%3EN%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
@@ -12,7 +13,7 @@
 <body class="teams-page">
 
 <nav class="teams-nav">
-  <a class="teams-nav-logo" href="index.html">← CleanMap</a>
+  <a class="teams-nav-logo" href="index.html">← Nexora</a>
   <span class="teams-nav-title">Teams</span>
   <button class="btn-primary btn-sm" onclick="openCreateModal()">+ New Team</button>
 </nav>
@@ -23,11 +24,11 @@
     <p class="teams-subtitle">Collaborate to keep your area clean</p>
   </div>
 
-  <div id="userId-bar" class="user-bar">
-    <label>Your user ID:</label>
-    <input id="userIdInput" type="text" placeholder="e.g. alice" />
-    <button class="btn-primary btn-sm" onclick="setUserId()">Set</button>
-    <span id="currentUserLabel" class="user-label"></span>
+  <div class="user-bar auth-bar">
+    <div>
+      <span id="currentUserLabel" class="user-label"></span>
+      <p class="user-note">Create and manage your teams.</p>
+    </div>
   </div>
 
   <div id="teamsContainer" class="teams-grid-wrap">
@@ -60,6 +61,5 @@
 <div id="toast" class="toast"></div>
 
 <script src="teams.js?v=2"></script>
-<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

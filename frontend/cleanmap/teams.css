@@ -1,7 +1,3 @@
-/* ============================================================
-   Teams pages — CleanMap dark theme
-   ============================================================ */
-
 :root {
   --bg: #0d1117;
   --surface: #161b22;
@@ -18,7 +14,9 @@
 
 /* ---- Base ---- */
 body.teams-page {
-  background: var(--bg);
+  background: radial-gradient(circle at top left, rgba(64, 201, 255, 0.14), transparent 18%),
+    radial-gradient(circle at 95% 10%, rgba(53, 227, 159, 0.1), transparent 16%),
+    linear-gradient(180deg, #0b1117 0%, #080c12 100%);
   color: var(--text);
   font-family: 'Space Grotesk', sans-serif;
   margin: 0;
@@ -66,9 +64,13 @@ body.teams-page {
 
 /* ---- Main ---- */
 .teams-main {
-  max-width: 900px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 32px 20px;
+  padding: 32px 22px;
+  background: rgba(10, 16, 26, 0.94);
+  border: 1px solid rgba(64, 201, 255, 0.12);
+  border-radius: 28px;
+  box-shadow: 0 36px 100px rgba(0, 0, 0, 0.35);
 }
 
 .teams-header { margin-bottom: 24px; }
@@ -180,7 +182,8 @@ body.teams-page {
   font-size: 0.85rem;
   color: var(--text-muted);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

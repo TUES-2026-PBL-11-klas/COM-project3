@@ -2,7 +2,6 @@ const API_BASE_DEFAULT = 'https://com-project3.onrender.com';
 const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 const API_CANDIDATES = [
-  API_BASE_DEFAULT,
   ...(IS_LOCAL ? [
     'http://localhost:5432',
     'http://localhost:30543',
@@ -10,7 +9,8 @@ const API_CANDIDATES = [
     'http://localhost:7210',
     'http://localhost:5000',
     'http://localhost:5001'
-  ] : [])
+  ] : []),
+  API_BASE_DEFAULT
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -22,10 +22,11 @@ if (!IS_LOCAL && (API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1
   API_BASE = '';
 }
 let currentUserId = localStorage.getItem('cm_user_id') || '';
+let currentUserName = '';
 let currentTeam = null;
 
-document.getElementById('navUserLabel').textContent =
-  currentUserId ? `You: ${currentUserId}` : '';
+attachAuthButton();
+updateUserLabel();
 
 detectApiAndLoad();
 
@@ -50,7 +51,51 @@ async function detectApiAndLoad() {
     showToast('Could not connect to API.', true);
     return;
   }
+
+  await restoreUserState();
   loadTeam();
+}
+
+async function restoreUserState() {
+  const savedUser = localStorage.getItem('cm_user');
+  const savedToken = localStorage.getItem('cm_access_token');
+
+  if (savedUser) {
+    try {
+      const parsed = JSON.parse(savedUser);
+      currentUserId = parsed?.id || currentUserId;
+      currentUserName = parsed?.username || currentUserName;
+    } catch {
+      currentUserName = '';
+    }
+  }
+
+  if (!currentUserId && savedToken) {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${savedToken}` },
+        signal: AbortSignal.timeout(6000)
+      });
+      if (res.ok) {
+        const user = await res.json();
+        currentUserId = user?.id || currentUserId;
+        currentUserName = user?.username || currentUserName;
+        localStorage.setItem('cm_user', JSON.stringify(user));
+        localStorage.setItem('cm_user_id', currentUserId);
+      }
+    } catch {
+      // ignore restore failures
+    }
+  }
+
+  updateUserLabel();
+}
+
+function updateUserLabel() {
+  const navLabel = document.getElementById('navUserLabel');
+  if (navLabel) {
+    navLabel.textContent = currentUserId ? `You: ${currentUserName || currentUserId}` : '';
+  }
 }
 
 // ---- Load team ----
@@ -65,7 +110,7 @@ async function loadTeam() {
     renderMembers(currentTeam);
     await loadImages();
 
-    document.title = `${currentTeam.name} — CleanMap`;
+    document.title = `${currentTeam.name} — Nexora`;
     document.getElementById('navTeamName').textContent = currentTeam.name;
     document.getElementById('pageLoader').style.display = 'none';
     document.getElementById('teamContent').style.display = 'block';
@@ -90,13 +135,16 @@ function renderMembers(team) {
     const initials = String(m.userId).substring(0, 2).toUpperCase();
     const joined = new Date(m.joinedAt).toLocaleDateString();
     const canRemove = isOwner && m.userId !== currentUserId;
+    const memberName = m.userId === currentUserId
+      ? `You${currentUserName ? `: ${currentUserName}` : `: ${m.userId}`}`
+      : m.userId;
 
     return `
       <div class="member-row">
         <div class="member-info">
           <div class="avatar">${initials}</div>
           <div>
-            <div class="member-name">${esc(m.userId)}</div>
+            <div class="member-name">${esc(memberName)}</div>
             <div class="member-joined">Joined ${joined}</div>
           </div>
         </div>
@@ -110,17 +158,28 @@ function renderMembers(team) {
   document.getElementById('addMemberCard').style.display = isOwner ? 'flex' : 'none';
 }
 
+async function getAuthHeaders() {
+  const token = localStorage.getItem('cm_access_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function addMember() {
   const userId = document.getElementById('newMemberId').value.trim();
   if (!userId) { showToast('Enter a user ID.', true); return; }
   if (!currentUserId) { showToast('Set your user ID first.', true); return; }
 
+  const authHeaders = await getAuthHeaders();
+  if (!authHeaders.Authorization) {
+    showToast('Please login again.', true);
+    return;
+  }
+
   try {
     const res = await fetch(
-      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}/members?userId=${encodeURIComponent(currentUserId)}`,
+      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}/members`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
       }
     );
@@ -139,10 +198,16 @@ async function addMember() {
 async function removeMember(targetUserId) {
   if (!confirm('Remove this member from the team?')) return;
 
+  const authHeaders = await getAuthHeaders();
+  if (!authHeaders.Authorization) {
+    showToast('Please login again.', true);
+    return;
+  }
+
   try {
     const res = await fetch(
-      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(targetUserId)}?userId=${encodeURIComponent(currentUserId)}`,
-      { method: 'DELETE' }
+      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(targetUserId)}`,
+      { method: 'DELETE', headers: authHeaders }
     );
 
     if (!res.ok) {
@@ -193,8 +258,11 @@ async function uploadImage() {
   if (notes) formData.append('notes', notes);
 
   try {
+    const params = new URLSearchParams({ userId: currentUserId });
+    if (notes) params.append('notes', notes);
+
     const res = await fetch(
-      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}/images?userId=${encodeURIComponent(currentUserId)}`,
+      `${API_BASE}/api/teams/${encodeURIComponent(teamId)}/images?${params.toString()}`,
       { method: 'POST', body: formData }
     );
 
@@ -219,6 +287,28 @@ function showToast(message, isError = false) {
   toast.className = 'toast show' + (isError ? ' error' : '');
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function attachAuthButton() {
+  const authBtn = document.getElementById('authBtn');
+  if (!authBtn) return;
+
+  authBtn.textContent = currentUserId ? 'Logout' : 'Login';
+  authBtn.addEventListener('click', () => {
+    if (currentUserId) {
+      localStorage.removeItem('cm_user_id');
+      localStorage.removeItem('cm_access_token');
+      localStorage.removeItem('cm_user');
+      currentUserId = '';
+      currentUserName = '';
+      document.getElementById('navUserLabel').textContent = '';
+      showToast('Logged out.');
+      window.location.href = 'teams.html';
+    } else {
+      const nextUrl = encodeURIComponent(`team-detail.html?id=${teamId}`);
+      window.location.href = `login.html?next=${nextUrl}`;
+    }
+  });
 }
 
 function esc(str) {
