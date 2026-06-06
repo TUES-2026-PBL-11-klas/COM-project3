@@ -42,7 +42,7 @@ public sealed class TeamService : ITeamService
             if (userByName is null)
                 return (false, "User does not exist.");
 
-            targetUserId = userByName.Id;
+            targetUserId = userByName.Id.ToString();
         }
 
         if (team.Members.Any(m => m.UserId == targetUserId))
