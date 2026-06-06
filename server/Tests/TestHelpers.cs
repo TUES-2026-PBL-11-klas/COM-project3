@@ -26,6 +26,13 @@ public sealed class FakeUserRepository : IUserRepository
         return Task.FromResult(user);
     }
 
+    // Added overload to satisfy IUserRepository which expects ObjectId
+    public Task<User?> GetByIdAsync(ObjectId id)
+    {
+        var user = _users.FirstOrDefault(u => u.Id == id.ToString());
+        return Task.FromResult(user);
+    }
+
     public Task<User?> GetByUsernameAsync(string username)
     {
         var user = _users.FirstOrDefault(u => string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
