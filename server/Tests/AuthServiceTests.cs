@@ -53,7 +53,7 @@ public sealed class AuthServiceTests
         });
 
         Assert.Null(response);
-        Assert.Equal("Password must be at least 8 characters.", error);
+        Assert.Equal("Password must be at least 8 characters long.", error);
     }
 
     [Fact]
